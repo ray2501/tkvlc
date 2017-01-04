@@ -1,0 +1,14 @@
+2017-01-05  Danilo Chang
+
+    * Update README.md
+
+2017-01-04  Danilo Chang
+
+    * Implement commands
+    * configure.ac: add libvlc library link 
+    * Update package name
+
+2017-01-03  Danilo Chang
+
+    * Dump sample extension
+
