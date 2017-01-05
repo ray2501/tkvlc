@@ -34,8 +34,14 @@ menu .menubar.file
 
 .menubar.file add separator
 .menubar.file add command -label "Exit" -command {
-  tkvlc::destroy
-  exit 0
+    if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
+       if {[tkvlc::isPlaying]==1} {
+          tkvlc::stop	
+       }
+
+       tkvlc::destroy
+       exit
+    }
 }
 
 # We'll use a frame control to draw libVLC media player 
@@ -50,5 +56,16 @@ tkvlc::init [winfo id $display]
       tkvlc::pause
     } else {
       tkvlc::play
+    }
+}
+
+wm protocol . WM_DELETE_WINDOW {
+    if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
+       if {[tkvlc::isPlaying]==1} {
+          tkvlc::stop	
+       }
+
+       tkvlc::destroy
+       exit
     }
 }
