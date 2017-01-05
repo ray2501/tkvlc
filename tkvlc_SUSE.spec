@@ -4,11 +4,11 @@
 
 Name:          tkvlc
 Summary:       A demo to embed libVLC to Tk toolkit widget
-Version:       0.1
+Version:       0.2
 Release:       2
 License:       MIT
 Group:         Development/Libraries/Tcl
-Source:        https://github.com/ray2501/tkvlc/tkvlc_0.1.zip
+Source:        https://github.com/ray2501/tkvlc/tkvlc_0.2.zip
 URL:           https://github.com/ray2501/tkvlc
 Buildrequires: tcl >= 8.5
 Buildrequires: tk >= 8.5

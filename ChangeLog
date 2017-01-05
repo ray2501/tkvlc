@@ -1,5 +1,7 @@
 2017-01-05  Danilo Chang
 
+    * Bump version to 0.2
+    * Fix build fail on Windows platform
     * Update README.md
 
 2017-01-04  Danilo Chang
