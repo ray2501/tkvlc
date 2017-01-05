@@ -26,7 +26,7 @@ menu .menubar.file
     set openfile [tk_getOpenFile -filetypes $types]
     
     if {$openfile != ""} {
-        # Fix for Windows, the the native name
+        # Fix for Windows, libVLC needs the native file path
         set getFileName [file nativename $openfile]
         tkvlc::open $getFileName
     }
