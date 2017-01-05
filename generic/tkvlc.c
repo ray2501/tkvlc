@@ -12,6 +12,10 @@ extern "C" {
 #include <string.h>
 #include <vlc/vlc.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 /*
  * Only the _Init function is exported.
  */
@@ -56,7 +60,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
      */
 #ifdef _WIN32
     Tcl_GetIntFromObj(interp, objv[1], (int*)&hwnd);
-    libvlc_media_player_set_hwnd(hwnd);
+    libvlc_media_player_set_hwnd(media_player, (void *) hwnd);
 #else
     Tcl_GetIntFromObj(interp, objv[1], (int *) &drawable);
     libvlc_media_player_set_xwindow(media_player, (uint32_t) drawable);
