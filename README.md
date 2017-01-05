@@ -72,6 +72,25 @@ So if you need specify Tk include, below is an example:
     $ make
     $ make install
 
+WINDOWS BUILD
+=====
+
+## MSYS2/MinGW-W64
+
+VLC binary installers for Windows do not include the LibVLC SDK.
+
+To build this extension, user needs libVLC import libraries and development headers.
+Please check [LibVLC_Tutorial] (https://wiki.videolan.org/LibVLC_Tutorial/#Windows).
+Copy libraries to C:\msys64\mingw64\lib and headers (vlc folder) to C:\msys64\mingw64\include.
+
+When execute tkvlc, user needs libvlc.dll, libvlccore.dll and plugins files.
+
+Next step is to build tclopenal.
+
+    $ ./configure --with-tcl=/c/tcl/lib
+    $ make
+    $ make install
+
 Example
 =====
 
