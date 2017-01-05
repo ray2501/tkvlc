@@ -33,7 +33,10 @@ menu .menubar.file
 }
 
 .menubar.file add separator
-.menubar.file add command -label "Exit" -command {exit 0}
+.menubar.file add command -label "Exit" -command {
+  tkvlc::destroy
+  exit 0
+}
 
 # We'll use a frame control to draw libVLC media player 
 set display [frame .tkvlc -width 800 -height 600 -background white -takefocus 1]
@@ -49,6 +52,3 @@ tkvlc::init [winfo id $display]
       tkvlc::play
     }
 }
-
-bind $display <Destroy> {tkvlc::destroy}
-
