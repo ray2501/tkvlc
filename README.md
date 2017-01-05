@@ -65,7 +65,7 @@ below is an example:
     $ make install
 
 I enable `TEA_PROG_WISH` check, because this extension needs Tk toolkit.
-So if you need specify Tk include, below is an example:
+So if you need specify Tk include path, below is an example:
 
     $ cd tkvlc
     $ ./configure --with-tkinclude=/usr/include/tk
