@@ -44,6 +44,8 @@ Below is an example for Ubuntu:
 
     sudo apt-get install libvlc-dev
 
+And please notice, I think user still needs VLC codec package when playing a multimedia file.
+
 Building under most UNIX systems is easy, just run the configure script
 and then run make. For more information about the build process, see
 the tcl/unix/README file in the Tcl src dist. The following minimal
