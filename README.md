@@ -85,7 +85,7 @@ Copy libraries to C:\msys64\mingw64\lib and headers (vlc folder) to C:\msys64\mi
 
 When execute tkvlc, user needs libvlc.dll, libvlccore.dll and plugins files.
 
-Next step is to build tclopenal.
+Next step is to build tkvlc.
 
     $ ./configure --with-tcl=/c/tcl/lib
     $ make
