@@ -11,6 +11,8 @@ Group:         Development/Libraries/Tcl
 Source:        https://github.com/ray2501/tkvlc/tkvlc_0.1.zip
 URL:           https://github.com/ray2501/tkvlc
 Buildrequires: tcl >= 8.5
+Buildrequires: tk >= 8.5
+Buildrequires: vlc-devel
 BuildRoot:     %{buildroot}
 
 %description
