@@ -34,11 +34,15 @@ tkvlc::destroy
 UNIX BUILD
 =====
 
-Only test on openSUSE LEAP 42.2.
+Only test on openSUSE LEAP 42.2 and Ubuntu 14.04.
 
-First is to install libVLC development files:
+First is to install libVLC development files. Below is an example for openSUSE:
 
     sudo zypper in vlc-devel
+
+Below is an example for Ubuntu:
+
+    sudo apt-get install libvlc-dev
 
 Building under most UNIX systems is easy, just run the configure script
 and then run make. For more information about the build process, see
@@ -55,6 +59,14 @@ below is an example:
 
     $ cd tkvlc
     $ ./configure --with-tcl=/opt/activetcl/lib
+    $ make
+    $ make install
+
+I enable `TEA_PROG_WISH` check, because this extension needs Tk toolkit.
+So if you need specify Tk include, below is an example:
+
+    $ cd tkvlc
+    $ ./configure --with-tkinclude=/usr/include/tk
     $ make
     $ make install
 
