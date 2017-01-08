@@ -7,12 +7,28 @@ package require tkvlc
 
 update idletasks
 
+proc scaleVolume {mywidget scaleValue} {
+    tkvlc::setVolume [$mywidget get]
+}
+
+proc quitApp {} {
+    if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
+       if {[tkvlc::isPlaying]==1} {
+          tkvlc::stop
+       }
+
+       tkvlc::destroy
+       exit
+    }
+}
+
 wm title . "tkvlc demo"
 
 option add *tearOff 0
 menu .menubar
 . configure -menu .menubar
 menu .menubar.file
+menu .menubar.tool
 .menubar add cascade -menu .menubar.file -label File
 
 .menubar.file add command -label "Open File" -command {
@@ -33,15 +49,23 @@ menu .menubar.file
 }
 
 .menubar.file add separator
-.menubar.file add command -label "Exit" -command {
-    if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
-       if {[tkvlc::isPlaying]==1} {
-          tkvlc::stop	
-       }
+.menubar.file add command -label "Exit" -command quitApp
 
-       tkvlc::destroy
-       exit
-    }
+.menubar add cascade -menu .menubar.tool -label Tool
+
+.menubar.tool add command -label "Volume" -command {
+  set vw [toplevel .volume]
+  wm title $vw "Setup"
+
+  scale .volume.scale -orient vertical -length 450 -from 100 -to 0 \
+    -showvalue 1 -tickinterval 30 -command "scaleVolume .volume.scale"
+  grid .volume.scale -row 0 -column 0 -sticky ne
+  set value [tkvlc::getVolume]
+  .volume.scale set $value
+
+  wm protocol $vw WM_DELETE_WINDOW {
+    destroy .volume
+  }
 }
 
 # We'll use a frame control to draw libVLC media player 
@@ -59,13 +83,5 @@ tkvlc::init [winfo id $display]
     }
 }
 
-wm protocol . WM_DELETE_WINDOW {
-    if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
-       if {[tkvlc::isPlaying]==1} {
-          tkvlc::stop	
-       }
+wm protocol . WM_DELETE_WINDOW quitApp
 
-       tkvlc::destroy
-       exit
-    }
-}

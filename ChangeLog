@@ -1,3 +1,7 @@
+2017-01-08  Danilo Chang
+
+    * Add tkvlc::setVolume and tkvlc::getVolume command
+
 2017-01-05  Danilo Chang
 
     * Bump version to 0.2
