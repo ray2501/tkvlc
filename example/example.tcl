@@ -34,6 +34,9 @@ menu .menubar.tool
 .menubar.file add command -label "Open File" -command {
     set types {
         {{AVI Files}       {.avi}        }
+        {{3GP Files}       {.3gp}        }
+        {{FLV Files}       {.flv}        }
+        {{MKF Files}       {.mkv}        }
         {{MPG Files}       {.mpg}        }
         {{MP4 Files}       {.mp4}        }
         {{All Files}        *            }
