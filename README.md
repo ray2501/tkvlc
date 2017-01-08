@@ -28,7 +28,7 @@ tkvlc::play
 tkvlc::pause  
 tkvlc::stop  
 tkvlc::isPlaying  
-tkvlc::setVolume  
+tkvlc::setVolume volume  
 tkvlc::getVolume  
 tkvlc::destroy
 
