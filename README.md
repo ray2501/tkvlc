@@ -22,8 +22,8 @@ MIT
 Implement commands
 =====
 
-tkvlc::init  
-tkvlc::open  
+tkvlc::init HWND  
+tkvlc::open filename  
 tkvlc::play  
 tkvlc::pause  
 tkvlc::stop  

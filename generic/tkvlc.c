@@ -37,8 +37,9 @@ HWND hwnd;
 uint32_t drawable;
 #endif
 
-libvlc_media_player_t *media_player;
-libvlc_instance_t *vlc_inst;
+libvlc_instance_t *vlc_inst = NULL;
+libvlc_media_player_t *media_player = NULL;
+libvlc_media_t *media = NULL;
 int initialize = 0;
 TCL_DECLARE_MUTEX(myMutex);
 
@@ -80,7 +81,6 @@ static int TKVLC_OPEN(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
 {
     char *filename = NULL;
     int len = 0;
-    libvlc_media_t *media;
  
     if( objc != 2 ){
       Tcl_WrongNumArgs(interp, 1, objv, "filename");
@@ -103,6 +103,7 @@ static int TKVLC_OPEN(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
     }
 
     libvlc_media_player_set_media(media_player, media);
+    libvlc_media_parse(media);
     
     // Play media
     libvlc_media_player_play(media_player);
@@ -251,6 +252,60 @@ static int TKVLC_GETVOLUME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const
   return TCL_OK;
 }
 
+static int TKVLC_DURATION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
+{
+  Tcl_Obj *return_obj;
+  libvlc_time_t tm;
+  double result;
+
+  if( objc != 1 ){
+    Tcl_WrongNumArgs(interp, 1, objv, 0);
+    return TCL_ERROR;
+  }
+
+  if(initialize==0) {
+      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
+      return TCL_ERROR;
+  }
+
+  if(!media) {
+      return TCL_ERROR;
+  }
+
+  tm = libvlc_media_get_duration(media);
+  result = (double) tm / 1000.0;
+  return_obj = Tcl_NewDoubleObj(result);
+
+  Tcl_SetObjResult(interp, return_obj);
+
+  return TCL_OK;
+}
+
+static int TKVLC_GETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
+{
+  Tcl_Obj *return_obj;
+  libvlc_time_t tm;
+  double result;
+
+  if( objc != 1 ){
+    Tcl_WrongNumArgs(interp, 1, objv, 0);
+    return TCL_ERROR;
+  }
+
+  if(initialize==0) {
+      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
+      return TCL_ERROR;
+  }
+
+  tm = libvlc_media_player_get_time(media_player);
+  result = (double) tm / 1000.0;
+  return_obj = Tcl_NewDoubleObj(result);
+
+  Tcl_SetObjResult(interp, return_obj);
+
+  return TCL_OK;
+}
+
 static int TKVLC_VERSION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 {
   Tcl_Obj *return_obj;
@@ -324,6 +379,12 @@ int Tkvlc_Init(Tcl_Interp *interp)
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::getVolume", (Tcl_ObjCmdProc *) TKVLC_GETVOLUME,
+       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    Tcl_CreateObjCommand(interp, "tkvlc::duration", (Tcl_ObjCmdProc *) TKVLC_DURATION,
+       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    Tcl_CreateObjCommand(interp, "tkvlc::getTime", (Tcl_ObjCmdProc *) TKVLC_GETTIME,
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::version", (Tcl_ObjCmdProc *) TKVLC_VERSION,
