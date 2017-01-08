@@ -251,6 +251,29 @@ static int TKVLC_GETVOLUME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const
   return TCL_OK;
 }
 
+static int TKVLC_VERSION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
+{
+  Tcl_Obj *return_obj;
+  const char *result = NULL;
+
+  if( objc != 1 ){
+    Tcl_WrongNumArgs(interp, 1, objv, 0);
+    return TCL_ERROR;
+  }
+
+  if(initialize==0) {
+      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
+      return TCL_ERROR;
+  }
+
+  result = libvlc_get_version();
+  return_obj = Tcl_NewStringObj(result, -1);
+
+  Tcl_SetObjResult(interp, return_obj);
+
+  return TCL_OK;
+}
+
 static int TKVLC_DESTROY(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 {
   if( objc != 1 ){
@@ -301,6 +324,9 @@ int Tkvlc_Init(Tcl_Interp *interp)
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::getVolume", (Tcl_ObjCmdProc *) TKVLC_GETVOLUME,
+       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    Tcl_CreateObjCommand(interp, "tkvlc::version", (Tcl_ObjCmdProc *) TKVLC_VERSION,
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::destroy", (Tcl_ObjCmdProc *) TKVLC_DESTROY,

@@ -67,6 +67,9 @@ menu .menubar.tool
     destroy .volume
   }
 }
+.menubar.tool add command -label "libVLC version" -command {
+  tk_messageBox -message "libVLC version: [tkvlc::version]" -type ok
+}
 
 # We'll use a frame control to draw libVLC media player 
 set display [frame .tkvlc -width 800 -height 600 -background white -takefocus 1]

@@ -1,5 +1,6 @@
 2017-01-08  Danilo Chang
 
+    * Add tkvlc::version command
     * Add tkvlc::setVolume and tkvlc::getVolume command
 
 2017-01-05  Danilo Chang
