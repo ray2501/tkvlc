@@ -306,6 +306,33 @@ static int TKVLC_GETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*o
   return TCL_OK;
 }
 
+static int TKVLC_SETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
+{
+  libvlc_time_t tm = 0;
+
+  if( objc != 2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "time");
+    return TCL_ERROR;
+  }
+
+  if(initialize==0) {
+      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
+      return TCL_ERROR;
+  }
+
+  if(Tcl_GetWideIntFromObj(interp, objv[1], (Tcl_WideInt *) &tm) != TCL_OK) {
+    return TCL_ERROR;
+  }
+
+  // Set the movie time in ms and user should give the movie time in sec
+  tm = tm * 1000;
+
+  // Notice: not all formats and protocols support this
+  libvlc_media_player_set_time(media_player, tm);
+
+  return TCL_OK;
+}
+
 static int TKVLC_VERSION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 {
   Tcl_Obj *return_obj;
@@ -385,6 +412,9 @@ int Tkvlc_Init(Tcl_Interp *interp)
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::getTime", (Tcl_ObjCmdProc *) TKVLC_GETTIME,
+       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    Tcl_CreateObjCommand(interp, "tkvlc::setTime", (Tcl_ObjCmdProc *) TKVLC_SETTIME,
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     Tcl_CreateObjCommand(interp, "tkvlc::version", (Tcl_ObjCmdProc *) TKVLC_VERSION,

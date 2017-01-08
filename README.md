@@ -30,6 +30,9 @@ tkvlc::stop
 tkvlc::isPlaying  
 tkvlc::setVolume volume  
 tkvlc::getVolume  
+tkvlc::duration  
+tkvlc::getTime  
+tkvlc::setTime time  
 tkvlc::version  
 tkvlc::destroy
 

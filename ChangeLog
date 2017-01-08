@@ -1,3 +1,7 @@
+2017-01-09  Danilo Chang
+
+    * Add tkvlc::setTime command
+
 2017-01-08  Danilo Chang
 
     * Add tkvlc::duration and tkvlc::getTime command
