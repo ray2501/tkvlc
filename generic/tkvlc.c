@@ -309,6 +309,7 @@ static int TKVLC_GETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*o
 static int TKVLC_SETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 {
   libvlc_time_t tm = 0;
+  double settm;
 
   if( objc != 2 ){
     Tcl_WrongNumArgs(interp, 1, objv, "time");
@@ -320,12 +321,12 @@ static int TKVLC_SETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*o
       return TCL_ERROR;
   }
 
-  if(Tcl_GetWideIntFromObj(interp, objv[1], (Tcl_WideInt *) &tm) != TCL_OK) {
+  if(Tcl_GetDoubleFromObj(interp, objv[1], &settm) != TCL_OK) {
     return TCL_ERROR;
   }
 
   // Set the movie time in ms and user should give the movie time in sec
-  tm = tm * 1000;
+  tm = (libvlc_time_t) settm * 1000;
 
   // Notice: not all formats and protocols support this
   libvlc_media_player_set_time(media_player, tm);
