@@ -58,7 +58,7 @@ menu .menubar.tool
   wm title $vw "Setup"
 
   scale .volume.scale -orient vertical -length 450 -from 100 -to 0 \
-    -showvalue 1 -tickinterval 30 -command "scaleVolume .volume.scale"
+    -showvalue 1 -tickinterval 20 -command "scaleVolume .volume.scale"
   grid .volume.scale -row 0 -column 0 -sticky ne
   set value [tkvlc::getVolume]
   .volume.scale set $value
