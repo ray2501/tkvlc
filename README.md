@@ -33,6 +33,8 @@ HANDLE getVolume
 HANDLE duration  
 HANDLE getTime  
 HANDLE setTime time  
+HANDLE getPosition  
+HANDLE setPosition pos  
 HANDLE version  
 HANDLE destroy
 

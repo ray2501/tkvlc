@@ -71,6 +71,8 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     "duration",
     "getTime",
     "setTime",
+    "getPosition",
+    "setPosition",
     "version",
     "destroy",
     0
@@ -87,6 +89,8 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     TKVLC_DURATION,
     TKVLC_GETTIME,
     TKVLC_SETTIME,
+    TKVLC_GETPOSITION,
+    TKVLC_SETPOSITION,
     TKVLC_VERSION,
     TKVLC_DESTROY,
   };
@@ -288,6 +292,44 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 
         // Notice: not all formats and protocols support this
         libvlc_media_player_set_time(pVLC->media_player, tm);
+
+        break;
+    }
+
+    case TKVLC_GETPOSITION: {
+        Tcl_Obj *return_obj;
+        float result;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        result = libvlc_media_player_get_position(pVLC->media_player);
+        return_obj = Tcl_NewDoubleObj((double) result);
+
+        Tcl_SetObjResult(interp, return_obj);
+        break;
+    }
+
+    case TKVLC_SETPOSITION: {
+        double pos;
+
+        if( objc != 3 ){
+            Tcl_WrongNumArgs(interp, 2, objv, "pos");
+            return TCL_ERROR;
+        }
+
+        if(Tcl_GetDoubleFromObj(interp, objv[2], &pos) != TCL_OK) {
+            return TCL_ERROR;
+        }
+
+        if(pos < 0.0 || pos > 1.0) {
+            return TCL_ERROR;
+        }
+
+        // Set movie position as percentage between 0.0 and 1.0
+        libvlc_media_player_set_position(pVLC->media_player, (float) pos);
 
         break;
     }
