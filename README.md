@@ -35,6 +35,7 @@ HANDLE getTime
 HANDLE setTime time  
 HANDLE getPosition  
 HANDLE setPosition pos  
+HANDLE isSeekable  
 HANDLE getState  
 HANDLE version  
 HANDLE destroy
@@ -48,6 +49,8 @@ HANDLE destroy
 `getPosition` get movie position as percentage between 0.0 and 1.0.
 
 `setPosition` set movie position as percentage between 0.0 and 1.0.
+
+`isSeekable` return true if the media player can seek.
 
 `getState` get current movie state.
 
