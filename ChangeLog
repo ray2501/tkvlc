@@ -1,5 +1,6 @@
 2017-01-09  Danilo Chang
 
+    * Add isSeekable command
     * Add getPosition and setPosition command
     * Re-design command
       ** INCOMPATIBLE CHANGE **

@@ -73,6 +73,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     "setTime",
     "getPosition",
     "setPosition",
+    "isSeekable",
     "version",
     "destroy",
     0
@@ -91,6 +92,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     TKVLC_SETTIME,
     TKVLC_GETPOSITION,
     TKVLC_SETPOSITION,
+    TKVLC_ISSEEKABLE,
     TKVLC_VERSION,
     TKVLC_DESTROY,
   };
@@ -329,7 +331,32 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
         }
 
         // Set movie position as percentage between 0.0 and 1.0
+        // This has no effect if playback is not enabled.
+        // This might not work depending on the underlying input format
+        // and protocol.
         libvlc_media_player_set_position(pVLC->media_player, (float) pos);
+
+        break;
+    }
+
+    case TKVLC_ISSEEKABLE: {
+        Tcl_Obj *return_obj;
+        int result;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        // true if the media player can seek
+        result = libvlc_media_player_is_seekable(pVLC->media_player);
+        if(result > 0) {
+            return_obj = Tcl_NewBooleanObj(1);
+        } else {
+            return_obj = Tcl_NewBooleanObj(0);
+        }
+
+        Tcl_SetObjResult(interp, return_obj);
 
         break;
     }

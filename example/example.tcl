@@ -41,8 +41,8 @@ menu .menubar.tool
         {{MP4 Files}       {.mp4}        }
         {{All Files}        *            }
     }
-    
-    set openfile [tk_getOpenFile -filetypes $types]
+
+    set openfile [tk_getOpenFile -filetypes $types -multiple 0]
     
     if {$openfile != ""} {
         # Fix for Windows, libVLC needs the native file path
