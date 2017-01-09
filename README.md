@@ -35,8 +35,23 @@ HANDLE getTime
 HANDLE setTime time  
 HANDLE getPosition  
 HANDLE setPosition pos  
+HANDLE getState  
 HANDLE version  
 HANDLE destroy
+
+`duration` get duration (in second) of movie time.
+
+`getTime` get the current movie time (in second).
+
+`setTime` set the movie time (in second).
+
+`getPosition` get movie position as percentage between 0.0 and 1.0.
+
+`setPosition` set movie position as percentage between 0.0 and 1.0.
+
+`getState` get current movie state.
+Movie state has below states: idle, opening, buffering, playing, paused,
+stopped, ended, error
 
 
 UNIX BUILD
