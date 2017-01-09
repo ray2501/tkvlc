@@ -74,6 +74,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     "getPosition",
     "setPosition",
     "isSeekable",
+    "getState",
     "version",
     "destroy",
     0
@@ -93,6 +94,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     TKVLC_GETPOSITION,
     TKVLC_SETPOSITION,
     TKVLC_ISSEEKABLE,
+    TKVLC_GETSTATE,
     TKVLC_VERSION,
     TKVLC_DESTROY,
   };
@@ -354,6 +356,41 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
             return_obj = Tcl_NewBooleanObj(1);
         } else {
             return_obj = Tcl_NewBooleanObj(0);
+        }
+
+        Tcl_SetObjResult(interp, return_obj);
+
+        break;
+    }
+
+    case TKVLC_GETSTATE: {
+        Tcl_Obj *return_obj = NULL;
+        libvlc_state_t state;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        // get the current state of the media player (playing, paused, ...)
+        state = libvlc_media_player_get_state(pVLC->media_player);
+
+        if(state==libvlc_NothingSpecial) {
+             return_obj = Tcl_NewStringObj("idle", -1);
+        } else if(state==libvlc_Opening) {
+             return_obj = Tcl_NewStringObj("opening", -1);
+        } else if(state==libvlc_Buffering) {
+             return_obj = Tcl_NewStringObj("buffering", -1);
+        } else if(state==libvlc_Playing) {
+             return_obj = Tcl_NewStringObj("playing", -1);
+        } else if(state==libvlc_Paused) {
+             return_obj = Tcl_NewStringObj("paused", -1);
+        } else if(state==libvlc_Stopped) {
+             return_obj = Tcl_NewStringObj("stopped", -1);
+        } else if(state==libvlc_Ended) {
+             return_obj = Tcl_NewStringObj("ended", -1);
+        } else if(state==libvlc_Error) {
+             return_obj = Tcl_NewStringObj("error", -1);
         }
 
         Tcl_SetObjResult(interp, return_obj);
