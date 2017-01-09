@@ -50,8 +50,9 @@ HANDLE destroy
 `setPosition` set movie position as percentage between 0.0 and 1.0.
 
 `getState` get current movie state.
-Movie state has below states: idle, opening, buffering, playing, paused,
-stopped, ended, error
+
+Movie state has below states (string): idle, opening, buffering, playing,
+paused, stopped, ended and error
 
 
 UNIX BUILD
