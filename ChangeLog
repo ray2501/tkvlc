@@ -1,5 +1,6 @@
 2017-01-09  Danilo Chang
 
+    * Bump version to 0.3
     * Add getState command
     * Add isSeekable command
     * Add getPosition and setPosition command
