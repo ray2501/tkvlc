@@ -1,4 +1,11 @@
 /*
+ * tkvlc.c
+ *
+ * A demo to embed libVLC to a Tk toolkit frame widget
+ * Copyright (C) Danilo Chang 2017
+ */
+
+/*
  * For C++ compilers, use extern "C"
  */
 
@@ -37,26 +44,317 @@ HWND hwnd;
 uint32_t drawable;
 #endif
 
-libvlc_instance_t *vlc_inst = NULL;
-libvlc_media_player_t *media_player = NULL;
-libvlc_media_t *media = NULL;
-int initialize = 0;
-TCL_DECLARE_MUTEX(myMutex);
+typedef struct libVLCData libVLCData;
+
+struct libVLCData {
+  libvlc_instance_t *vlc_inst;
+  Tcl_Interp *interp;
+  libvlc_media_player_t *media_player;
+  libvlc_media_t *media;
+};
+
+
+int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
+{
+  libVLCData *pVLC = (libVLCData *) cd;
+  int choice;
+  int rc = TCL_OK;
+
+  static const char *VLC_strs[] = {
+    "open",
+    "play",
+    "pause",
+    "stop",
+    "isPlaying",
+    "setVolume",
+    "getVolume",
+    "duration",
+    "getTime",
+    "setTime",
+    "version",
+    "destroy",
+    0
+  };
+
+  enum VLC_enum {
+    TKVLC_OPEN,
+    TKVLC_PLAY,
+    TKVLC_PAUSE,
+    TKVLC_STOP,
+    TKVLC_ISPLAYING,
+    TKVLC_SETVOLUME,
+    TKVLC_GETVOLUME,
+    TKVLC_DURATION,
+    TKVLC_GETTIME,
+    TKVLC_SETTIME,
+    TKVLC_VERSION,
+    TKVLC_DESTROY,
+  };
+
+  if( objc < 2 ){
+    Tcl_WrongNumArgs(interp, 1, objv, "SUBCOMMAND ...");
+    return TCL_ERROR;
+  }
+
+  if( Tcl_GetIndexFromObj(interp, objv[1], VLC_strs, "option", 0, &choice) ){
+    return TCL_ERROR;
+  }
+
+  switch( (enum VLC_enum)choice ){
+
+    case TKVLC_OPEN: {
+        char *filename = NULL;
+        int len = 0;
+
+        if( objc != 3 ){
+            Tcl_WrongNumArgs(interp, 2, objv, "filename");
+            return TCL_ERROR;
+        }
+
+        filename = Tcl_GetStringFromObj(objv[2], &len);
+        if( !filename || len < 1 ) {
+            return TCL_ERROR;
+        }
+
+        pVLC->media = libvlc_media_new_path(pVLC->vlc_inst, filename);
+        if(pVLC->media == NULL) {  // Is it necessary?
+            return TCL_ERROR;
+        }
+
+        libvlc_media_player_set_media(pVLC->media_player, pVLC->media);
+        libvlc_media_parse(pVLC->media);  //get meta info
+
+        libvlc_media_player_play(pVLC->media_player); // Play media
+        libvlc_media_release(pVLC->media);
+
+        break;
+    }
+
+    case TKVLC_PLAY: {
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        if(libvlc_media_player_is_playing(pVLC->media_player) == 0) {
+            libvlc_media_player_play(pVLC->media_player);
+        }
+
+        break;
+    }
+
+    case TKVLC_PAUSE: {
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        if(libvlc_media_player_is_playing(pVLC->media_player) == 1) {
+            libvlc_media_player_pause(pVLC->media_player);
+        }
+
+        break;
+    }
+
+    case TKVLC_STOP: {
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        libvlc_media_player_stop(pVLC->media_player);
+
+        break;
+    }
+
+    case TKVLC_ISPLAYING: {
+        Tcl_Obj *return_obj;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        if(libvlc_media_player_is_playing(pVLC->media_player) == 1) {
+            return_obj = Tcl_NewBooleanObj(1);
+        } else {
+            return_obj = Tcl_NewBooleanObj(0);
+        }
+
+        Tcl_SetObjResult(interp, return_obj);
+
+        break;
+    }
+
+    case TKVLC_SETVOLUME: {
+        Tcl_Obj *return_obj;
+        int volume = 0, result = 0;
+
+        if( objc != 3 ){
+            Tcl_WrongNumArgs(interp, 2, objv, "volume");
+            return TCL_ERROR;
+        }
+
+        if(Tcl_GetIntFromObj(interp, objv[2], &volume) != TCL_OK) {
+            return TCL_ERROR;
+        }
+
+        // 0 if the volume was set, -1 if it was out of range
+        result = libvlc_audio_set_volume(pVLC->media_player, volume);
+        if(result == 0) {
+            return_obj = Tcl_NewBooleanObj(1);
+        } else {
+            return_obj = Tcl_NewBooleanObj(0);
+        }
+
+        Tcl_SetObjResult(interp, return_obj);
+
+        break;
+    }
+
+    case TKVLC_GETVOLUME: {
+        Tcl_Obj *return_obj;
+        int result = 0;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        result = libvlc_audio_get_volume (pVLC->media_player);
+        return_obj = Tcl_NewIntObj(result);
+
+        Tcl_SetObjResult(interp, return_obj);
+
+        break;
+    }
+
+    case TKVLC_DURATION: {
+        Tcl_Obj *return_obj;
+        libvlc_time_t tm;
+        double result;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        if(!pVLC->media) {
+            return TCL_ERROR;
+        }
+
+        tm = libvlc_media_get_duration(pVLC->media);
+        result = (double) tm / 1000.0;
+        return_obj = Tcl_NewDoubleObj(result);
+
+        Tcl_SetObjResult(interp, return_obj);
+
+        break;
+    }
+
+    case TKVLC_GETTIME: {
+        Tcl_Obj *return_obj;
+        libvlc_time_t tm;
+        double result;
+
+        if( objc != 2 ){
+            Tcl_WrongNumArgs(interp, 2, objv, 0);
+            return TCL_ERROR;
+        }
+
+        tm = libvlc_media_player_get_time(pVLC->media_player);
+        result = (double) tm / 1000.0;
+        return_obj = Tcl_NewDoubleObj(result);
+
+        Tcl_SetObjResult(interp, return_obj);
+        break;
+    }
+
+    case TKVLC_SETTIME: {
+        libvlc_time_t tm = 0;
+        double settm;
+
+        if( objc != 3 ){
+            Tcl_WrongNumArgs(interp, 2, objv, "time");
+            return TCL_ERROR;
+        }
+
+        if(Tcl_GetDoubleFromObj(interp, objv[2], &settm) != TCL_OK) {
+            return TCL_ERROR;
+        }
+
+        // Set the movie time in ms and user should give the movie time in sec
+        tm = (libvlc_time_t) settm * 1000;
+
+        // Notice: not all formats and protocols support this
+        libvlc_media_player_set_time(pVLC->media_player, tm);
+
+        break;
+    }
+
+    case TKVLC_VERSION: {
+      Tcl_Obj *return_obj;
+      const char *result;
+
+      if( objc != 2 ){
+        Tcl_WrongNumArgs(interp, 2, objv, 0);
+        return TCL_ERROR;
+      }
+
+      result = libvlc_get_version();
+      return_obj = Tcl_NewStringObj(result, -1);
+
+      Tcl_SetObjResult(interp, return_obj);
+
+      break;
+    }
+
+    case TKVLC_DESTROY: {
+      if( objc != 2 ){
+        Tcl_WrongNumArgs(interp, 2, objv, 0);
+        return TCL_ERROR;
+      }
+
+      libvlc_media_player_release(pVLC->media_player);
+      libvlc_release(pVLC->vlc_inst);
+
+      Tcl_Free((char *)pVLC);
+      pVLC = NULL;
+
+      Tcl_DeleteCommand(interp, Tcl_GetStringFromObj(objv[0], 0));
+      break;
+    }
+
+  } /* End of the SWITCH statement */
+
+  return rc;
+}
 
 
 static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 {
-    if( objc != 2 ){
-      Tcl_WrongNumArgs(interp, 1, objv, "HWND");
+    const char *zArg;
+    libVLCData *p;
+
+    if( objc != 3 ) {
+      Tcl_WrongNumArgs(interp, 2, objv, "HANDLE HWND");
       return TCL_ERROR;
     }
 
-    Tcl_MutexLock(&myMutex);
-    initialize = 1;
-    Tcl_MutexUnlock(&myMutex);
+    p = (libVLCData *)Tcl_Alloc( sizeof(*p) );
+    if( p==0 ) {
+      Tcl_SetResult(interp, (char *)"malloc failed", TCL_STATIC);
+      return TCL_ERROR;
+    }
 
-    vlc_inst = libvlc_new(0, NULL);
-    media_player = libvlc_media_player_new(vlc_inst);
+    memset(p, 0, sizeof(*p));
+    p->interp = interp;
+    p->vlc_inst = NULL;
+    p->media_player = NULL;
+    p->media = NULL;
+
+    p->vlc_inst = libvlc_new(0, NULL);
+    p->media_player = libvlc_media_player_new(p->vlc_inst);
 
     /*
      * Tcl side use "winfo id window" to give a low-level
@@ -66,314 +364,35 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
      * Under Windows, this is the Windows HWND.
      */
 #ifdef _WIN32
-    Tcl_GetIntFromObj(interp, objv[1], (int*)&hwnd);
-    libvlc_media_player_set_hwnd(media_player, (void *) hwnd);
+    Tcl_GetIntFromObj(interp, objv[2], (int*)&hwnd);
+    libvlc_media_player_set_hwnd(p->media_player, (void *) hwnd);
 #else
-    Tcl_GetIntFromObj(interp, objv[1], (int *) &drawable);
-    libvlc_media_player_set_xwindow(media_player, (uint32_t) drawable);
+    Tcl_GetIntFromObj(interp, objv[2], (int *) &drawable);
+    libvlc_media_player_set_xwindow(p->media_player, (uint32_t) drawable);
 #endif
 
-  return TCL_OK;
-}
-
-
-static int TKVLC_OPEN(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-    char *filename = NULL;
-    int len = 0;
- 
-    if( objc != 2 ){
-      Tcl_WrongNumArgs(interp, 1, objv, "filename");
-      return TCL_ERROR;
-    }
-
-    if(initialize==0) {
-        Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-        return TCL_ERROR;
-    }
-
-    filename = Tcl_GetStringFromObj(objv[1], &len);
-    if( !filename || len < 1 ) {
-          return TCL_ERROR;
-    }
-
-    media = libvlc_media_new_path(vlc_inst, filename);
-    if(media == NULL) {  // Is it necessary?
-       return TCL_ERROR;
-    }
-
-    libvlc_media_player_set_media(media_player, media);
-    libvlc_media_parse(media);
-    
-    // Play media
-    libvlc_media_player_play(media_player);
-
-    libvlc_media_release(media);
+    zArg = Tcl_GetStringFromObj(objv[1], 0);
+    Tcl_CreateObjCommand(interp, zArg, libVLCObjCmd, (char*)p, (Tcl_CmdDeleteProc *)NULL);
 
     return TCL_OK;
 }
 
 
-static int TKVLC_PLAY(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(libvlc_media_player_is_playing(media_player) == 0) {
-    libvlc_media_player_play(media_player);
-  }
-
-  return TCL_OK;
-}
-
-
-static int TKVLC_PAUSE(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(libvlc_media_player_is_playing(media_player) == 1) {
-    libvlc_media_player_pause(media_player);
-  }
-
-  return TCL_OK;
-}
-
-
-static int TKVLC_STOP(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  libvlc_media_player_stop(media_player);
-
-  return TCL_OK;
-}
-
-
-static int TKVLC_ISPLAYING(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(libvlc_media_player_is_playing(media_player) == 1) {
-    return_obj = Tcl_NewBooleanObj(1);
-  } else {
-    return_obj = Tcl_NewBooleanObj(0);
-  }
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_SETVOLUME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-  int volume = 0, result = 0;
-
-  if( objc != 2 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "volume");
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(Tcl_GetIntFromObj(interp, objv[1], &volume) != TCL_OK) {
-    return TCL_ERROR;
-  }
-
-  // 0 if the volume was set, -1 if it was out of range
-  result = libvlc_audio_set_volume(media_player, volume);
-  if(result == 0) {
-    return_obj = Tcl_NewBooleanObj(1);
-  } else {
-    return_obj = Tcl_NewBooleanObj(0);
-  }
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_GETVOLUME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-  int result = 0;
-
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  result = libvlc_audio_get_volume (media_player);
-  return_obj = Tcl_NewIntObj(result);
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_DURATION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-  libvlc_time_t tm;
-  double result;
-
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(!media) {
-      return TCL_ERROR;
-  }
-
-  tm = libvlc_media_get_duration(media);
-  result = (double) tm / 1000.0;
-  return_obj = Tcl_NewDoubleObj(result);
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_GETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-  libvlc_time_t tm;
-  double result;
-
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  tm = libvlc_media_player_get_time(media_player);
-  result = (double) tm / 1000.0;
-  return_obj = Tcl_NewDoubleObj(result);
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_SETTIME(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  libvlc_time_t tm = 0;
-  double settm;
-
-  if( objc != 2 ){
-    Tcl_WrongNumArgs(interp, 1, objv, "time");
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  if(Tcl_GetDoubleFromObj(interp, objv[1], &settm) != TCL_OK) {
-    return TCL_ERROR;
-  }
-
-  // Set the movie time in ms and user should give the movie time in sec
-  tm = (libvlc_time_t) settm * 1000;
-
-  // Notice: not all formats and protocols support this
-  libvlc_media_player_set_time(media_player, tm);
-
-  return TCL_OK;
-}
-
-static int TKVLC_VERSION(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  Tcl_Obj *return_obj;
-  const char *result = NULL;
-
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  if(initialize==0) {
-      Tcl_AppendResult(interp, "Please execute tkvlc::init first!", (char*)0);
-      return TCL_ERROR;
-  }
-
-  result = libvlc_get_version();
-  return_obj = Tcl_NewStringObj(result, -1);
-
-  Tcl_SetObjResult(interp, return_obj);
-
-  return TCL_OK;
-}
-
-static int TKVLC_DESTROY(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
-{
-  if( objc != 1 ){
-    Tcl_WrongNumArgs(interp, 1, objv, 0);
-    return TCL_ERROR;
-  }
-
-  Tcl_MutexLock(&myMutex);
-  initialize = 0;
-  Tcl_MutexUnlock(&myMutex);
-
-  libvlc_media_player_release(media_player);
-  libvlc_release(vlc_inst);
-
-  return TCL_OK;
-}
-
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tkvlc_Init --
+ *
+ *	Initialize the new package.
+ *
+ * Results:
+ *	A standard Tcl result
+ *
+ * Side effects:
+ *	The tkvlc package is created.
+ *
+ *----------------------------------------------------------------------
+ */
 
 int Tkvlc_Init(Tcl_Interp *interp)
 {
@@ -386,42 +405,6 @@ int Tkvlc_Init(Tcl_Interp *interp)
     }
 
     Tcl_CreateObjCommand(interp, "tkvlc::init", (Tcl_ObjCmdProc *) TKVLC_INIT,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::open", (Tcl_ObjCmdProc *) TKVLC_OPEN,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::play", (Tcl_ObjCmdProc *) TKVLC_PLAY,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::pause", (Tcl_ObjCmdProc *) TKVLC_PAUSE,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::stop", (Tcl_ObjCmdProc *) TKVLC_STOP,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::isPlaying", (Tcl_ObjCmdProc *) TKVLC_ISPLAYING,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::setVolume", (Tcl_ObjCmdProc *) TKVLC_SETVOLUME,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::getVolume", (Tcl_ObjCmdProc *) TKVLC_GETVOLUME,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::duration", (Tcl_ObjCmdProc *) TKVLC_DURATION,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::getTime", (Tcl_ObjCmdProc *) TKVLC_GETTIME,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::setTime", (Tcl_ObjCmdProc *) TKVLC_SETTIME,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::version", (Tcl_ObjCmdProc *) TKVLC_VERSION,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-
-    Tcl_CreateObjCommand(interp, "tkvlc::destroy", (Tcl_ObjCmdProc *) TKVLC_DESTROY,
        (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
     return TCL_OK;

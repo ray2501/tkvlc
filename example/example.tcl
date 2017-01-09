@@ -8,16 +8,16 @@ package require tkvlc
 update idletasks
 
 proc scaleVolume {mywidget scaleValue} {
-    tkvlc::setVolume [$mywidget get]
+    tkvlc0 setVolume [$mywidget get]
 }
 
 proc quitApp {} {
     if {[tk_messageBox -message "Quit?" -type yesno] eq "yes"} {
-       if {[tkvlc::isPlaying]==1} {
-          tkvlc::stop
+       if {[tkvlc0 isPlaying]==1} {
+          tkvlc0 stop
        }
 
-       tkvlc::destroy
+       tkvlc0 destroy
        exit
     }
 }
@@ -47,7 +47,7 @@ menu .menubar.tool
     if {$openfile != ""} {
         # Fix for Windows, libVLC needs the native file path
         set getFileName [file nativename $openfile]
-        tkvlc::open $getFileName
+        tkvlc0 open $getFileName
     }
 }
 
@@ -63,7 +63,7 @@ menu .menubar.tool
   scale .volume.scale -orient vertical -length 450 -from 100 -to 0 \
     -showvalue 1 -tickinterval 20 -command "scaleVolume .volume.scale"
   grid .volume.scale -row 0 -column 0 -sticky ne
-  set value [tkvlc::getVolume]
+  set value [tkvlc0 getVolume]
   .volume.scale set $value
 
   wm protocol $vw WM_DELETE_WINDOW {
@@ -71,7 +71,7 @@ menu .menubar.tool
   }
 }
 .menubar.tool add command -label "libVLC version" -command {
-  tk_messageBox -message "libVLC version: [tkvlc::version]" -type ok
+  tk_messageBox -message "libVLC version: [tkvlc0 version]" -type ok
 }
 
 # We'll use a frame control to draw libVLC media player 
@@ -79,13 +79,13 @@ set display [frame .tkvlc -width 800 -height 600 -background white -takefocus 1]
 pack $display -fill both -expand 1
 
 # initial our embedded libVLC package
-tkvlc::init [winfo id $display]
+tkvlc::init tkvlc0 [winfo id $display]
 
  bind $display <1> {
-    if {[tkvlc::isPlaying]==1} {
-      tkvlc::pause
+    if {[tkvlc0 isPlaying]==1} {
+      tkvlc0 pause
     } else {
-      tkvlc::play
+      tkvlc0 play
     }
 }
 

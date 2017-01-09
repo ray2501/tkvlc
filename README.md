@@ -22,19 +22,19 @@ MIT
 Implement commands
 =====
 
-tkvlc::init HWND  
-tkvlc::open filename  
-tkvlc::play  
-tkvlc::pause  
-tkvlc::stop  
-tkvlc::isPlaying  
-tkvlc::setVolume volume  
-tkvlc::getVolume  
-tkvlc::duration  
-tkvlc::getTime  
-tkvlc::setTime time  
-tkvlc::version  
-tkvlc::destroy
+tkvlc::init HANDLE HWND  
+HANDLE open filename  
+HANDLE play  
+HANDLE pause  
+HANDLE stop  
+HANDLE isPlaying  
+HANDLE setVolume volume  
+HANDLE getVolume  
+HANDLE duration  
+HANDLE getTime  
+HANDLE setTime time  
+HANDLE version  
+HANDLE destroy
 
 
 UNIX BUILD

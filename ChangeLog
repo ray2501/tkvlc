@@ -1,5 +1,8 @@
 2017-01-09  Danilo Chang
 
+    * Re-design command
+      ** INCOMPATIBLE CHANGE **
+
     * Add tkvlc::setTime command
 
 2017-01-08  Danilo Chang
