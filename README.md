@@ -1,12 +1,12 @@
 tkvlc
 =====
 
-[libVLC] (http://www.videolan.org/vlc/libvlc.html) is the core engine
+[libVLC](http://www.videolan.org/vlc/libvlc.html) is the core engine
 and the interface to the multimedia framework on which
-[VLC media player] (http://www.videolan.org/vlc/) is based.
+[VLC media player](http://www.videolan.org/vlc/) is based.
 
-It is a demo to embed [libVLC] (https://wiki.videolan.org/LibVLC/)
-to a [Tk toolkit] (http://www.tcl.tk/) frame widget.
+It is a demo to embed [libVLC](https://wiki.videolan.org/LibVLC/)
+to a [Tk toolkit](http://www.tcl.tk/) frame widget.
 
 It involves making a frame widget in Tcl, and then passing its Windows
 HWND or X Window ID to C (use `winfo id window`) to initialize the
@@ -107,7 +107,7 @@ WINDOWS BUILD
 VLC binary installers for Windows do not include the LibVLC SDK.
 
 To build this extension, user needs libVLC import libraries and development headers.
-Please check [LibVLC_Tutorial] (https://wiki.videolan.org/LibVLC_Tutorial/#Windows).
+Please check [LibVLC_Tutorial](https://wiki.videolan.org/LibVLC_Tutorial/#Windows).
 Copy libraries to C:\msys64\mingw64\lib and headers (vlc folder) to C:\msys64\mingw64\include.
 
 When execute tkvlc, user needs libvlc.dll, libvlccore.dll and plugins files.
