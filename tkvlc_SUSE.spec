@@ -10,9 +10,11 @@ License:       MIT
 Group:         Development/Libraries/Tcl
 Source:        https://github.com/ray2501/tkvlc/tkvlc_0.3.zip
 URL:           https://github.com/ray2501/tkvlc
-Buildrequires: tcl-devel >= 8.5
-Buildrequires: tk-devel >= 8.5
-Buildrequires: vlc-devel
+BuildRequires: autoconf
+BuildRequires: make
+BuildRequires: tcl-devel >= 8.5
+BuildRequires: tk-devel >= 8.5
+BuildRequires: vlc-devel
 BuildRoot:     %{buildroot}
 
 %description
