@@ -5,10 +5,10 @@
 Name:          tkvlc
 Summary:       A demo to embed libVLC to Tk toolkit widget
 Version:       0.3
-Release:       2
+Release:       0
 License:       MIT
 Group:         Development/Libraries/Tcl
-Source:        https://github.com/ray2501/tkvlc/tkvlc_0.3.zip
+Source:        %{name}-%{version}.tar.gz
 URL:           https://github.com/ray2501/tkvlc
 BuildRequires: autoconf
 BuildRequires: make
@@ -21,7 +21,7 @@ BuildRoot:     %{buildroot}
 A demo to embed libVLC to Tk toolkit widget.
 
 %prep
-%setup -q -n %{name}
+%setup -q -n %{name}-%{version}
 
 %build
 ./configure \

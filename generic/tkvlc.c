@@ -18,6 +18,7 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <vlc/vlc.h>
+#include <vlc/libvlc_version.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -130,7 +131,12 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
         }
 
         libvlc_media_player_set_media(pVLC->media_player, pVLC->media);
-        libvlc_media_parse(pVLC->media);  //get meta info
+#if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
+        libvlc_media_parse_with_options(pVLC->media, libvlc_media_parse_local, -1);
+#else
+        libvlc_media_parse(pVLC->media);
+#endif
+
 
         libvlc_media_player_play(pVLC->media_player); // Play media
         libvlc_media_release(pVLC->media);
@@ -441,9 +447,14 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
 {
     const char *zArg;
     libVLCData *p;
+#if !defined(_WIN32)
+#if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
+    const char *argv[] ={"--no-xlib"};
+#endif
+#endif
 
-    if( objc != 3 ) {
-      Tcl_WrongNumArgs(interp, 2, objv, "HANDLE HWND");
+    if( objc != 2 && objc != 3 ) {
+      Tcl_WrongNumArgs(interp, 2, objv, "HANDLE ?HWND?");
       return TCL_ERROR;
     }
 
@@ -459,7 +470,16 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
     p->media_player = NULL;
     p->media = NULL;
 
+
+#ifdef _WIN32
     p->vlc_inst = libvlc_new(0, NULL);
+#else
+#if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
+    p->vlc_inst = libvlc_new(2, argv);
+#else
+    p->vlc_inst = libvlc_new(0, NULL);
+#endif
+#endif
     p->media_player = libvlc_media_player_new(p->vlc_inst);
 
     /*
@@ -469,6 +489,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
      * On Unix platforms, this is the X window identifier.
      * Under Windows, this is the Windows HWND.
      */
+    if (objc == 3) {
 #ifdef _WIN32
     Tcl_GetIntFromObj(interp, objv[2], (int*)&hwnd);
     libvlc_media_player_set_hwnd(p->media_player, (void *) hwnd);
@@ -476,6 +497,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
     Tcl_GetIntFromObj(interp, objv[2], (int *) &drawable);
     libvlc_media_player_set_xwindow(p->media_player, (uint32_t) drawable);
 #endif
+    }
 
     zArg = Tcl_GetStringFromObj(objv[1], 0);
     Tcl_CreateObjCommand(interp, zArg, libVLCObjCmd, (char*)p, (Tcl_CmdDeleteProc *)NULL);

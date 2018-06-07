@@ -12,6 +12,9 @@ It involves making a frame widget in Tcl, and then passing its Windows
 HWND or X Window ID to C (use `winfo id window`) to initialize the
 libVLC media player.
 
+User also can use this extension in console program, just not pass HWAD 
+when using `tkvlc::init` to initialize (after version 0.4).
+
 
 License
 =====
@@ -22,7 +25,7 @@ MIT
 Implement commands
 =====
 
-tkvlc::init HANDLE HWND  
+tkvlc::init HANDLE ?HWND?  
 HANDLE open filename  
 HANDLE play  
 HANDLE pause  
