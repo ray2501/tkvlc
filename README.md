@@ -14,6 +14,7 @@ libVLC media player.
 
 User also can use this extension in console program, just not pass HWND 
 when using `tkvlc::init` to initialize (after version 0.4).
+However, tkvlc in console program now only work when interactive with tclsh.
 
 
 License
