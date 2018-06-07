@@ -454,7 +454,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
 #endif
 
     if( objc != 2 && objc != 3 ) {
-      Tcl_WrongNumArgs(interp, 2, objv, "HANDLE ?HWND?");
+      Tcl_WrongNumArgs(interp, 1, objv, "HANDLE ?HWND?");
       return TCL_ERROR;
     }
 
@@ -475,7 +475,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
     p->vlc_inst = libvlc_new(0, NULL);
 #else
 #if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
-    p->vlc_inst = libvlc_new(2, argv);
+    p->vlc_inst = libvlc_new(1, argv);
 #else
     p->vlc_inst = libvlc_new(0, NULL);
 #endif

@@ -1,5 +1,6 @@
 2018-06-07  Danilo Chang
 
+    * Fix tkvlc::init Tcl_WrongNumArgs incorrect parameter
     * Bump version to 0.4
     * Update source code, use LIBVLC_VERSION_INT to check VLC version
 
