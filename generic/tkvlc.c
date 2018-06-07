@@ -114,6 +114,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     case TKVLC_OPEN: {
         char *filename = NULL;
         int len = 0;
+        int status = 0;
 
         if( objc != 3 ){
             Tcl_WrongNumArgs(interp, 2, objv, "filename");
@@ -127,12 +128,17 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 
         pVLC->media = libvlc_media_new_path(pVLC->vlc_inst, filename);
         if(pVLC->media == NULL) {  // Is it necessary?
+            Tcl_AppendResult(interp, "libvlc_media_new_path failed.", (char*)0);
             return TCL_ERROR;
         }
 
         libvlc_media_player_set_media(pVLC->media_player, pVLC->media);
 #if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
-        libvlc_media_parse_with_options(pVLC->media, libvlc_media_parse_local, -1);
+        status = libvlc_media_parse_with_options(pVLC->media, libvlc_media_parse_local, -1);
+        if (status < 0) {
+            Tcl_AppendResult(interp, "libvlc_media_parse_with_options failed.", (char*)0);
+            return TCL_ERROR;
+        }
 #else
         libvlc_media_parse(pVLC->media);
 #endif

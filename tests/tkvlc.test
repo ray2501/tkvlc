@@ -29,7 +29,16 @@ test tkvlc-1.2 {create a handle} {*}{
     -result {}
 }
 
-test tkvlc-1.3 {destroy a handle} {*}{
+test tkvlc-1.3 {open a file, wrong # args} {*}{
+    -body {
+        handle open
+    }
+    -returnCodes error
+    -match glob
+    -result {wrong # args*}
+}
+
+test tkvlc-1.4 {destroy a handle} {*}{
     -body {
         handle destroy
     }

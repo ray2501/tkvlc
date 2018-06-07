@@ -14,7 +14,7 @@ BuildRequires: autoconf
 BuildRequires: make
 BuildRequires: tcl-devel >= 8.5
 BuildRequires: tk-devel >= 8.5
-BuildRequires: vlc-devel
+BuildRequires: vlc-devel >= 2.2.0
 BuildRoot:     %{buildroot}
 
 %description
