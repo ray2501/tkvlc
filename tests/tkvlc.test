@@ -1,0 +1,42 @@
+# tkvlc.test --
+#
+#	Tests for tkvlc
+#------------------------------------------------------------------------------
+
+lappend auto_path .
+if {[lsearch [namespace children] ::tcltest] == -1} {
+    package require tcltest 2
+    namespace import -force ::tcltest::*
+}
+loadTestedCommands
+package require tkvlc
+
+#-------------------------------------------------------------------------------
+
+test tkvlc-1.1 {create a handle, wrong # args} {*}{
+    -body {
+        tkvlc::init
+    }
+    -returnCodes error
+    -match glob
+    -result {wrong # args*}
+}
+
+test tkvlc-1.2 {create a handle} {*}{
+    -body {
+        tkvlc::init handle
+    }
+    -result {}
+}
+
+test tkvlc-1.3 {destroy a handle} {*}{
+    -body {
+        handle destroy
+    }
+    -result {}
+}
+
+#-------------------------------------------------------------------------------
+
+cleanupTests
+return
