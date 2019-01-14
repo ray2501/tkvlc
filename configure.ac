@@ -19,7 +19,7 @@ dnl	to configure the system for the local environment.
 # so that we create the export library with the dll.
 #-----------------------------------------------------------------------
 
-AC_INIT([tkvlc], [0.6])
+AC_INIT([tkvlc], [0.7])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -42,8 +42,8 @@ TEA_LOAD_TCLCONFIG
 # Load the tkConfig.sh file if necessary (Tk extension)
 #--------------------------------------------------------------------
 
-#TEA_PATH_TKCONFIG
-#TEA_LOAD_TKCONFIG
+TEA_PATH_TKCONFIG
+TEA_LOAD_TKCONFIG
 
 #-----------------------------------------------------------------------
 # Handle the --prefix=... option by defaulting to what Tcl gave.
@@ -78,6 +78,18 @@ TEA_ADD_LIBS([-lvlc])
 TEA_ADD_CFLAGS([])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([])
+
+#--------------------------------------------------------------------
+# The --with-tk-photo flag is to allow for photo images.
+#--------------------------------------------------------------------
+AC_ARG_WITH([tk-photo],
+ [AC_HELP_STRING([--with-tk-photo],
+   [allow for photo images (default yes)])],
+ [], [with_tk_photo=yes])
+
+if test x$with_tk_photo != xno; then
+     AC_DEFINE(USE_TK_PHOTO, [1], [Allow for photo images])
+fi
 
 #--------------------------------------------------------------------
 # __CHANGE__
