@@ -11,7 +11,7 @@ to a [Tk toolkit](http://www.tcl.tk/) frame widget.
 User can use `--with-tk-photo` flag to disable/enable to allow for photo images.
 This feature "allow for photo images" is from 
 [AndroWish](https://www.androwish.org/index.html/home) project
-and written by Christian Werner. Default is yes.
+and written by Christian Werner. Default is `yes`.
 
 It involves making a frame widget in Tcl, and then passing its Windows
 HWND or X Window ID to C (use `winfo id window`) to initialize the
