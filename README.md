@@ -8,14 +8,14 @@ and the interface to the multimedia framework on which
 It is a demo to embed [libVLC](https://wiki.videolan.org/LibVLC/)
 to a [Tk toolkit](http://www.tcl.tk/) frame widget.
 
-User can use `--with-tk-photo` flag to disable/enable to allow for photo images.
-This feature "allow for photo images" is from 
-[AndroWish](https://www.androwish.org/index.html/home) project
-and written by Christian Werner. Default is `yes`.
-
 It involves making a frame widget in Tcl, and then passing its Windows
 HWND or X Window ID to C (use `winfo id window`) to initialize the
 libVLC media player.
+
+User also can use `--with-tk-photo` flag to disable/enable to allow 
+for photo images. This feature "allow for photo images" is from 
+[AndroWish](https://www.androwish.org/index.html/home) project
+and written by Christian Werner. Default is `yes`.
 
 User also can use this extension in console program, just not pass HWND or photo 
 when using `tkvlc::init` to initialize (after version 0.4).
