@@ -1,6 +1,7 @@
 #!/usr/bin/tclsh
 #
 # A demo to embed libVLC to TK toolkit widget
+# For: configure --with-tk-photo=no
 #
 package require Tk
 package require tkvlc

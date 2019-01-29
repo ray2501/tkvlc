@@ -45,24 +45,38 @@ HANDLE isseekable
 HANDLE state  
 HANDLE rate ?value?  
 HANDLE version  
-HANDLE destroy
+HANDLE destroy  
+HANDLE event ?cmd?  
+HANDLE repeat ?flag?  
+HANDLE info
 
 `duration` get duration (in second) of movie time.
 
-`getTime` get the current movie time (in second).
+`time` get or set the current movie time (in second).
 
-`setTime` set the movie time (in second).
+`position` get or set movie position as percentage between 0.0 and 1.0.
 
-`getPosition` get movie position as percentage between 0.0 and 1.0.
+`isseekable` return true if the media player can seek.
 
-`setPosition` set movie position as percentage between 0.0 and 1.0.
+`state` get current movie state.
 
-`isSeekable` return true if the media player can seek.
+`rate` get or set relative playback speed
 
-`getState` get current movie state.
+`repeat` get or set replay flag
 
-Movie state has below states (string): idle, opening, buffering, playing,
-paused, stopped, ended and error
+`event` get or set event callback
+
+`info` return array set list with information media player
+
+Movie state has states (string): idle, opening, buffering, playing,
+paused, stopped, ended, and error.
+
+The event callback is invoked with an additional argument, which is
+made up of the event type (string): media, state, time, position,
+audio, and frame.
+
+The event type frame occurs when new pixels have been rendered into
+a photo image.
 
 
 UNIX BUILD

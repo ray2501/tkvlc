@@ -1,11 +1,9 @@
 #!/usr/bin/tclsh
 #
-# A demo to embed libVLC to TK toolkit widget
-#
+# A demo to display libVLC in a Tk image/label
+
 package require Tk
 package require tkvlc
-
-update idletasks
 
 proc scaleVolume {mywidget scaleValue} {
     tkvlc0 volume [$mywidget get]
@@ -44,12 +42,9 @@ menu .menubar.tool
     set openfile [tk_getOpenFile -filetypes $types -multiple 0]
     
     if {$openfile != ""} {
-        # Fix for Windows, libVLC needs the native file path
-        set getFileName [file nativename $openfile]
-        tkvlc0 open $getFileName
+        tkvlc0 open $openfile
     }
 }
-
 .menubar.file add separator
 .menubar.file add command -label "Exit" -command quitApp
 
@@ -73,12 +68,12 @@ menu .menubar.tool
     tk_messageBox -message "libVLC version: [tkvlc0 version]" -type ok
 }
 
-# We'll use a photo image to draw libVLC media player
+# We use a photo image to draw libVLC media player
 set photo [image create photo -width 640 -height 480]
 set display [label .tkvlc -image $photo -background white -takefocus 1]
 pack $display -fill both -expand 1
 
-# initial our embedded libVLC package
+# Iinitialize libVLC
 tkvlc::init tkvlc0 $photo
 
 bind $display <1> {
