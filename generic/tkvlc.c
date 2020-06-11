@@ -2,7 +2,7 @@
  * tkvlc.c
  *
  * A demo to embed libVLC to a Tk toolkit frame widget
- * Copyright (C) Danilo Chang 2017
+ * Copyright (C) Danilo Chang 2017, 2020
  * Copyright (c) Christian Werner 2019
  */
 
@@ -34,7 +34,7 @@ extern "C" {
  * Only the _Init function is exported.
  */
 
-extern DLLEXPORT int	Tkvlc_Init(Tcl_Interp * interp);
+extern DLLEXPORT int Tkvlc_Init(Tcl_Interp * interp);
 
 /*
  * end block for C++
@@ -51,10 +51,10 @@ extern DLLEXPORT int	Tkvlc_Init(Tcl_Interp * interp);
  */
 
 typedef struct {
-  struct libVLCData *p;		/* libvlc/Tcl instance data. */
-  struct libVLCEvent *e;	/* Queued frame event or NULL. */
-  int busy;			/* True during rendering and event being queued. */
-  unsigned char *pixels;	/* RGB frame buffer, size is width*height*3. */
+  struct libVLCData *p;     /* libvlc/Tcl instance data. */
+  struct libVLCEvent *e;    /* Queued frame event or NULL. */
+  int busy;                 /* True during rendering and event being queued. */
+  unsigned char *pixels;    /* RGB frame buffer, size is width*height*3. */
 } libVLCFrame;
 
 /*
@@ -105,6 +105,7 @@ typedef struct libVLCData {
   Tcl_WideInt window_id;                /* Platform handle, if photo unused. */
 #endif
   Tcl_Obj *file_name;                   /* Filename of last opened media. */
+  int is_location;                      /* Indicate to use location api */
 #ifdef USE_TK_PHOTO
   Tcl_Obj *photo_name;                  /* Name of photo image or NULL. */
   int width, height;                    /* Width and height for photo image. */
@@ -127,19 +128,19 @@ typedef struct libVLCData {
  *
  * silence --
  *
- *	Dummy procedure to silence libvlc log messages.
+ *      Dummy procedure to silence libvlc log messages.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 static void silence(void *data, int level, const libvlc_log_t *ctx,
-		    const char *fmt, va_list args)
+            const char *fmt, va_list args)
 {
 }
 
@@ -191,13 +192,13 @@ static int Raspi_complain(Tcl_Interp *interp)
  *
  * Tk_check --
  *
- *	Lazy load Tk and check for its availability.
+ *      Lazy load Tk and check for its availability.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	Tk package may be loaded.
+ *      Tk package may be loaded.
  *
  *----------------------------------------------------------------------
  */
@@ -252,28 +253,32 @@ static void DoEventCallback(libVLCData *p, libVLCEvent *e)
 
     if (p->repeat && (e->type == EV_STATE_CHANGED)) {
       if (libvlc_media_player_get_state(p->media_player) == libvlc_Ended) {
-	if (p->file_name != NULL) {
-	  char *filename = Tcl_GetString(p->file_name);
-	  libvlc_media_t *media;
+        if (p->file_name != NULL) {
+          char *filename = Tcl_GetString(p->file_name);
+          libvlc_media_t *media;
 
-	  media = libvlc_media_new_path(p->vlc_inst, filename);
-	  if (media != NULL) {
-	    libvlc_media_player_set_media(p->media_player, media);
-#if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
-	    int status =
-                libvlc_media_parse_with_options(media,
-                            libvlc_media_parse_local, -1);
+          if(p->is_location) {
+            media = libvlc_media_new_location(p->vlc_inst, filename);
+          } else {
+            media = libvlc_media_new_path(p->vlc_inst, filename);
+          }
+          if (media != NULL) {
+            libvlc_media_player_set_media(p->media_player, media);
+    #if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
+            int status =
+                    libvlc_media_parse_with_options(media,
+                                libvlc_media_parse_local, -1);
 
-            if (status < 0) {
-                libvlc_media_release(media);
-            }
-#else
-	    libvlc_media_parse(media);
-#endif
-	    libvlc_media_player_play(p->media_player);
-	    libvlc_media_release(media);
-	  }
-	}
+                if (status < 0) {
+                    libvlc_media_release(media);
+                }
+    #else
+            libvlc_media_parse(media);
+    #endif
+            libvlc_media_player_play(p->media_player);
+            libvlc_media_release(media);
+          }
+        }
       }
     }
     Tcl_Preserve(p);
@@ -286,26 +291,26 @@ static void DoEventCallback(libVLCData *p, libVLCEvent *e)
     list = Tcl_NewListObj(nCmdObjs, cmdObjs);
     switch (e->type) {
       case EV_MEDIA_CHANGED:
-	evname = "media";
-	break;
+        evname = "media";
+        break;
       case EV_STATE_CHANGED:
-	evname = "state";
-	break;
+        evname = "state";
+        break;
       case EV_TIME_CHANGED:
-	evname = "time";
-	break;
+        evname = "time";
+        break;
       case EV_POS_CHANGED:
-	evname = "position";
-	break;
+        evname = "position";
+        break;
       case EV_AUDIO_CHANGED:
-	evname = "audio";
-	break;
+        evname = "audio";
+        break;
       case EV_NEW_FRAME:
-	evname = "frame";
-	break;
+        evname = "frame";
+        break;
       default:
-	evname = "unknown";
-	break;
+        evname = "unknown";
+        break;
     }
     Tcl_ListObjAppendElement(NULL, list, Tcl_NewStringObj(evname, -1));
     Tcl_IncrRefCount(list);
@@ -318,7 +323,7 @@ static void DoEventCallback(libVLCData *p, libVLCEvent *e)
     if (p->cmdObjs != NULL) {
       /* new callback installed */
       for (i = 0; i < nCmdObjs; i++) {
-	Tcl_DecrRefCount(cmdObjs[i]);
+          Tcl_DecrRefCount(cmdObjs[i]);
       }
       ckfree(cmdObjs);
     } else {
@@ -336,13 +341,13 @@ static void DoEventCallback(libVLCData *p, libVLCEvent *e)
  *
  * libVLChandlerTcl --
  *
- *	Procedure called in Tcl thread to report a media player event.
+ *      Procedure called in Tcl thread to report a media player event.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	A Tcl callback is evaluated.
+ *      A Tcl callback is evaluated.
  *
  *----------------------------------------------------------------------
  */
@@ -360,12 +365,12 @@ static int libVLChandlerTcl(Tcl_Event *ev, int flags)
     prev = NULL;
     while (this != NULL) {
       if (this == e) {
-	if (prev != NULL) {
-	  prev->next = this->next;
-	} else {
-	  p->ev_queue = this->next;
-	}
-	break;
+        if (prev != NULL) {
+          prev->next = this->next;
+        } else {
+          p->ev_queue = this->next;
+        }
+        break;
       }
       prev = this;
       this = this->next;
@@ -381,15 +386,15 @@ static int libVLChandlerTcl(Tcl_Event *ev, int flags)
  *
  * libVLChandler --
  *
- *	Procedure called in libvlc context to report a media player
- *	event.
+ *      Procedure called in libvlc context to report a media player
+ *      event.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	A Tcl event is queued and the thread owning the media player
- *	is alerted.
+ *      A Tcl event is queued and the thread owning the media player
+ *      is alerted.
  *
  *----------------------------------------------------------------------
  */
@@ -453,16 +458,16 @@ static void libVLChandler(const struct libvlc_event_t *ev, void *clientData)
  *
  * libVLCready --
  *
- *	Procedure called by the Tcl event mechanism. The event
- *	indicates a filled video buffer which is copied to the
- *	photo image.
+ *      Procedure called by the Tcl event mechanism. The event
+ *      indicates a filled video buffer which is copied to the
+ *      photo image.
  *
  * Results:
- *	Always true (event handled).
+ *      Always true (event handled).
  *
  * Side effects:
- *	Playback is stopped when the photo image is invalid.
- *	A frame event callback is invoked.
+ *      Playback is stopped when the photo image is invalid.
+ *      A frame event callback is invoked.
  *
  *----------------------------------------------------------------------
  */
@@ -499,8 +504,8 @@ static int libVLCready(Tcl_Event *ev, int flags)
     blk.offset[3] = 3;
     if (Tk_PhotoExpand(interp, photo, blk.width, blk.height) == TCL_OK) {
       if (Tk_PhotoPutBlock(interp, photo, &blk, 0, 0, blk.width, blk.height,
-			   TK_PHOTO_COMPOSITE_SET) == TCL_OK) {
-	docb = 1;
+               TK_PHOTO_COMPOSITE_SET) == TCL_OK) {
+          docb = 1;
       }
     }
   }
@@ -519,14 +524,14 @@ static int libVLCready(Tcl_Event *ev, int flags)
  *
  * libVLClock --
  *
- *	Procedure called in libvlc context when a new video frame is
- *	to be decoded.
+ *      Procedure called in libvlc context when a new video frame is
+ *      to be decoded.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -549,15 +554,15 @@ static void *libVLClock(void *clientData, void **planes)
  *
  * libVLCdisplay --
  *
- *	Procedure called by libvlc when a new video frame is
- *	to be displayed.
+ *      Procedure called by libvlc when a new video frame is
+ *      to be displayed.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	A Tcl event is queued and the thread owning the media player
- *	is alerted.
+ *      A Tcl event is queued and the thread owning the media player
+ *      is alerted.
  *
  *----------------------------------------------------------------------
  */
@@ -591,13 +596,13 @@ static void libVLCdisplay(void *clientData, void *picture)
  *
  * libVLCstatestr --
  *
- *	Return current state as string.
+ *      Return current state as string.
  *
  * Results:
- *	String pointer.
+ *      String pointer.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -639,13 +644,13 @@ static const char *libVLCstatestr(libVLCData *p)
  *
  * libVLCObjCmd --
  *
- *	Tcl command to deal with the libvlc media player.
+ *      Tcl command to deal with the libvlc media player.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	Many depending on command arguments.
+ *      Many depending on command arguments.
  *
  *----------------------------------------------------------------------
  */
@@ -657,7 +662,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
   int rc = TCL_OK;
 
   static const char *VLC_strs[] = {
-    "open", "play", "pause", "stop", "isplaying",
+    "open", "openurl", "play", "pause", "stop", "isplaying",
     "mute", "volume", "duration", "time", "position",
     "rate", "isseekable", "state", "version", "destroy",
 #ifdef USE_TK_PHOTO
@@ -666,7 +671,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
     NULL
   };
   enum VLC_enum {
-    TKVLC_OPEN, TKVLC_PLAY, TKVLC_PAUSE, TKVLC_STOP, TKVLC_ISPLAYING,
+    TKVLC_OPEN, TKVLC_OPENURL, TKVLC_PLAY, TKVLC_PAUSE, TKVLC_STOP, TKVLC_ISPLAYING,
     TKVLC_MUTE, TKVLC_VOLUME, TKVLC_DURATION, TKVLC_TIME, TKVLC_POSITION,
     TKVLC_RATE, TKVLC_ISSEEKABLE, TKVLC_STATE, TKVLC_VERSION, TKVLC_DESTROY,
 #ifdef USE_TK_PHOTO
@@ -687,9 +692,9 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 
     case TKVLC_OPEN: {
         char *filename = NULL;
-	Tcl_DString ds;
+        Tcl_DString ds;
         int status = 0;
-	libvlc_media_t *media;
+        libvlc_media_t *media;
 
         if( objc != 3 ){
             Tcl_WrongNumArgs(interp, 2, objv, "filename");
@@ -698,7 +703,7 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 
         filename = Tcl_TranslateFileName(interp, Tcl_GetString(objv[2]), &ds);
         if (filename == NULL) {
-	    return TCL_ERROR;
+            return TCL_ERROR;
         }
 
         media = libvlc_media_new_path(pVLC->vlc_inst, filename);
@@ -720,11 +725,56 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 #endif
 
         if (pVLC->file_name != NULL) {
-	    Tcl_DecrRefCount(pVLC->file_name);
+            Tcl_DecrRefCount(pVLC->file_name);
         }
         pVLC->file_name = Tcl_NewStringObj(filename, -1);
         Tcl_IncrRefCount(pVLC->file_name);
         Tcl_DStringFree(&ds);
+        pVLC->is_location = 0;
+        libvlc_media_player_play(pVLC->media_player); // Play media
+        libvlc_media_release(media);
+
+        break;
+    }
+
+    case TKVLC_OPENURL: {
+        char *filename = NULL;
+        int status = 0;
+        libvlc_media_t *media;
+
+        if (objc != 3){
+            Tcl_WrongNumArgs(interp, 2, objv, "url");
+            return TCL_ERROR;
+        }
+
+        filename = Tcl_GetString(objv[2]);
+        if (filename == NULL) {
+            return TCL_ERROR;
+        }
+
+        media = libvlc_media_new_location(pVLC->vlc_inst, filename);
+        if(media == NULL) {  // Is it necessary?
+            Tcl_AppendResult(interp, "libvlc_media_new_path failed.", (char*)0);
+            return TCL_ERROR;
+        }
+
+        libvlc_media_player_set_media(pVLC->media_player, media);
+#if LIBVLC_VERSION_INT >= LIBVLC_VERSION(3, 0, 0, 0)
+        status = libvlc_media_parse_with_options(media, libvlc_media_parse_local, -1);
+        if (status < 0) {
+            Tcl_AppendResult(interp, "libvlc_media_parse_with_options failed.", (char*)0);
+            return TCL_ERROR;
+        }
+#else
+        libvlc_media_parse(media);
+#endif
+
+        if (pVLC->file_name != NULL) {
+            Tcl_DecrRefCount(pVLC->file_name);
+        }
+        pVLC->file_name = Tcl_NewStringObj(filename, -1);
+        Tcl_IncrRefCount(pVLC->file_name);
+        pVLC->is_location = 1;
         libvlc_media_player_play(pVLC->media_player); // Play media
         libvlc_media_release(media);
 
@@ -791,20 +841,20 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
       int mute;
 
       if (objc > 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?value?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 2, objv, "?value?");
+        return TCL_ERROR;
       }
       if (objc > 2) {
         if (Tcl_GetBooleanFromObj(interp, objv[2], &mute) != TCL_OK) {
-	  return TCL_ERROR;
+           return TCL_ERROR;
         }
-	libvlc_audio_set_mute(pVLC->media_player, mute);
+        libvlc_audio_set_mute(pVLC->media_player, mute);
       } else {
-	mute = libvlc_audio_get_mute(pVLC->media_player);
-	if (mute < 0) {
-	  mute = 0;
-	}
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(mute));
+        mute = libvlc_audio_get_mute(pVLC->media_player);
+        if (mute < 0) {
+          mute = 0;
+        }
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(mute));
       }
       break;
     }
@@ -1023,52 +1073,52 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
         return TCL_ERROR;
       }
       if (objc == 2) {
-	Tcl_SetObjResult(interp,
-			 Tcl_NewListObj(pVLC->nSavedCmdObjs, pVLC->savedCmdObjs));
+        Tcl_SetObjResult(interp,
+        Tcl_NewListObj(pVLC->nSavedCmdObjs, pVLC->savedCmdObjs));
       } else {
-	Tcl_Obj **cmdObjs;
-	int i, nCmdObjs;
+        Tcl_Obj **cmdObjs;
+        int i, nCmdObjs;
 
-	if (Tcl_ListObjGetElements(interp, objv[2], &nCmdObjs, &cmdObjs)
-	    != TCL_OK) {
-	  return TCL_ERROR;
-	}
-	if (nCmdObjs <= 0) {
-	  Tcl_SetResult(interp, "empty command", TCL_STATIC);
-	  return TCL_ERROR;
-	}
-	if (pVLC->savedCmdObjs != NULL) {
-	  for (i = 0; i < pVLC->nSavedCmdObjs; i++) {
-	    Tcl_DecrRefCount(pVLC->savedCmdObjs[i]);
-	  }
-	  ckfree(pVLC->savedCmdObjs);
-	}
-	pVLC->nCmdObjs = nCmdObjs;
-	pVLC->cmdObjs = (Tcl_Obj **) ckalloc(nCmdObjs * sizeof(Tcl_Obj *));
-	for (i = 0; i < nCmdObjs; i++) {
-	  pVLC->cmdObjs[i] = cmdObjs[i];
-	  Tcl_IncrRefCount(pVLC->cmdObjs[i]);
-	}
-	pVLC->nSavedCmdObjs = pVLC->nCmdObjs;
-	pVLC->savedCmdObjs = pVLC->cmdObjs;
+        if (Tcl_ListObjGetElements(interp, objv[2], &nCmdObjs, &cmdObjs)
+            != TCL_OK) {
+          return TCL_ERROR;
+        }
+        if (nCmdObjs <= 0) {
+          Tcl_SetResult(interp, "empty command", TCL_STATIC);
+          return TCL_ERROR;
+        }
+        if (pVLC->savedCmdObjs != NULL) {
+          for (i = 0; i < pVLC->nSavedCmdObjs; i++) {
+            Tcl_DecrRefCount(pVLC->savedCmdObjs[i]);
+          }
+          ckfree(pVLC->savedCmdObjs);
+        }
+        pVLC->nCmdObjs = nCmdObjs;
+        pVLC->cmdObjs = (Tcl_Obj **) ckalloc(nCmdObjs * sizeof(Tcl_Obj *));
+        for (i = 0; i < nCmdObjs; i++) {
+          pVLC->cmdObjs[i] = cmdObjs[i];
+          Tcl_IncrRefCount(pVLC->cmdObjs[i]);
+        }
+        pVLC->nSavedCmdObjs = pVLC->nCmdObjs;
+        pVLC->savedCmdObjs = pVLC->cmdObjs;
       }
       break;
     }
 
     case TKVLC_REPEAT: {
       if (objc > 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?flag?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 2, objv, "?flag?");
+        return TCL_ERROR;
       }
       if (objc > 2) {
-	int flag;
+        int flag;
 
-	if (Tcl_GetBooleanFromObj(interp, objv[2], &flag) != TCL_OK) {
-	  return TCL_ERROR;
-	}
-	pVLC->repeat = flag;
+        if (Tcl_GetBooleanFromObj(interp, objv[2], &flag) != TCL_OK) {
+          return TCL_ERROR;
+        }
+        pVLC->repeat = flag;
       } else {
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pVLC->repeat));
+        Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pVLC->repeat));
       }
       break;
     }
@@ -1084,20 +1134,20 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
 
       TLOAE_STR("media");
       if (pVLC->file_name != NULL) {
-	TLOAE(pVLC->file_name);
+         TLOAE(pVLC->file_name);
       } else {
-	TLOAE(Tcl_NewObj());
+         TLOAE(Tcl_NewObj());
       }
       TLOAE_STR("mode");
       TLOAE_STR((pVLC->photo_name != NULL) ? "photo" : "window");
       TLOAE_STR("target");
       if (pVLC->photo_name != NULL) {
-	TLOAE(pVLC->photo_name);
+        TLOAE(pVLC->photo_name);
       } else {
-	char buffer[64];
+        char buffer[64];
 
-	sprintf(buffer, "0x%" TCL_LL_MODIFIER "x", pVLC->window_id);
-	TLOAE_STR(buffer);
+        sprintf(buffer, "0x%" TCL_LL_MODIFIER "x", pVLC->window_id);
+        TLOAE_STR(buffer);
       }
       TLOAE_STR("width");
       TLOAE_INT(pVLC->width);
@@ -1111,10 +1161,10 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
       TLOAE_INT(libvlc_audio_get_volume (pVLC->media_player));
       TLOAE_STR("duration");
       TLOAE_DBL((double)
-		libvlc_media_player_get_length(pVLC->media_player) / 1000.0);
+      libvlc_media_player_get_length(pVLC->media_player) / 1000.0);
       TLOAE_STR("time");
       TLOAE_DBL((double)
-		libvlc_media_player_get_time(pVLC->media_player) / 1000.0);
+      libvlc_media_player_get_time(pVLC->media_player) / 1000.0);
       TLOAE_STR("position");
       TLOAE_DBL(libvlc_media_player_get_position(pVLC->media_player));
       TLOAE_STR("rate");
@@ -1145,13 +1195,13 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
  *
  * FreeData --
  *
- *	Callback to cleanup libVLCData struct.
+ *  Callback to cleanup libVLCData struct.
  *
  * Results:
- *	None.
+ *  None.
  *
  * Side effects:
- *	Resources are released.
+ *  Resources are released.
  *
  *----------------------------------------------------------------------
  */
@@ -1232,13 +1282,13 @@ static void FreeData(char *clientData)
  *
  * libVLCObjCmdDeleted --
  *
- *	Destructor of libvlc media player object and command.
+ *  Destructor of libvlc media player object and command.
  *
  * Results:
- *	None.
+ *  None.
  *
  * Side effects:
- *	Resources are released.
+ *  Resources are released.
  *
  *----------------------------------------------------------------------
  */
@@ -1254,15 +1304,15 @@ static void libVLCObjCmdDeleted(ClientData clientData)
  *
  * TKVLC_INIT --
  *
- *	Initialize a libvlc media player given window identifier
- *	or photo image name.
+ *  Initialize a libvlc media player given window identifier
+ *  or photo image name.
  *
  * Results:
- *	A standard Tcl result.
+ *  A standard Tcl result.
  *
  * Side effects:
- *	Memory and resources are allocated, a Tcl command is
- *	created to refer to the media player.
+ *  Memory and resources are allocated, a Tcl command is
+ *  created to refer to the media player.
  *
  *----------------------------------------------------------------------
  */
@@ -1299,12 +1349,13 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
     p->interp = interp;
     p->vlc_inst = NULL;
     p->media_player = NULL;
+    p->file_name = NULL;
+    p->is_location = 0;
 
 #ifdef USE_TK_PHOTO
     p->repeat = 0;
     p->tk_checked = 0;
     p->window_id = 0;
-    p->file_name = NULL;
     p->photo_name = NULL;
     p->width = p->height = 0;
     p->tid = Tcl_GetCurrentThread();
@@ -1365,45 +1416,45 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
        * rendering to photo images. Thus we don't support it for now.
        */
       if (Raspi_complain(interp) != TCL_OK) {
-	libvlc_media_player_release(p->media_player);
-	libvlc_release(p->vlc_inst);
-	ckfree(p);
-	return TCL_ERROR;
+        libvlc_media_player_release(p->media_player);
+        libvlc_release(p->vlc_inst);
+        ckfree(p);
+        return TCL_ERROR;
       }
 #endif
 
       if (Tk_check(p, interp) != TCL_OK) {
-	libvlc_media_player_release(p->media_player);
-	libvlc_release(p->vlc_inst);
-	ckfree((char *) p);
-	return TCL_ERROR;
+        libvlc_media_player_release(p->media_player);
+        libvlc_release(p->vlc_inst);
+        ckfree((char *) p);
+        return TCL_ERROR;
       }
       if (Tk_MainWindow(interp) == NULL) {
-	Tcl_SetResult(interp, "application has been destroyed", TCL_STATIC);
-	libvlc_media_player_release(p->media_player);
-	libvlc_release(p->vlc_inst);
-	ckfree((char *) p);
-	return TCL_ERROR;
+        Tcl_SetResult(interp, "application has been destroyed", TCL_STATIC);
+        libvlc_media_player_release(p->media_player);
+        libvlc_release(p->vlc_inst);
+        ckfree((char *) p);
+        return TCL_ERROR;
       }
       photo = Tk_FindPhoto(interp, Tcl_GetString(objv[2]));
       if (photo == NULL) {
-	Tcl_SetResult(interp, "no valid photo image given", TCL_STATIC);
-	libvlc_media_player_release(p->media_player);
-	libvlc_release(p->vlc_inst);
-	ckfree((char *) p);
-	return TCL_ERROR;
+        Tcl_SetResult(interp, "no valid photo image given", TCL_STATIC);
+        libvlc_media_player_release(p->media_player);
+        libvlc_release(p->vlc_inst);
+        ckfree((char *) p);
+        return TCL_ERROR;
       }
       Tk_PhotoGetSize(photo, &p->width, &p->height);
       if (p->width <= 0 || p->height <= 0) {
-	p->width = 640;
-	p->height = 480;
+        p->width = 640;
+        p->height = 480;
       }
       p->photo_name = objv[2];
       Tcl_IncrRefCount(p->photo_name);
       libvlc_video_set_callbacks(p->media_player, libVLClock, NULL,
-				 libVLCdisplay, p);
+                 libVLCdisplay, p);
       libvlc_video_set_format(p->media_player, "RV24", p->width, p->height,
-			      p->width * 3);
+                  p->width * 3);
       p->frames[0].pixels = ckalloc(p->width * p->height * 3);
       p->frames[1].pixels = ckalloc(p->width * p->height * 3);
 
@@ -1462,13 +1513,13 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
  *
  * Tkvlc_Init --
  *
- *	Initialize the new package.
+ *      Initialize the new package.
  *
  * Results:
- *	A standard Tcl result
+ *      A standard Tcl result
  *
  * Side effects:
- *	The tkvlc package is created.
+ *      The tkvlc package is created.
  *
  *----------------------------------------------------------------------
  */
@@ -1485,12 +1536,12 @@ int Tkvlc_Init(Tcl_Interp *interp)
   }
 #endif
 
-    if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
-	return TCL_ERROR;
-    }
+  if (Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION) != TCL_OK) {
+    return TCL_ERROR;
+  }
 
-    Tcl_CreateObjCommand(interp, "tkvlc::init", (Tcl_ObjCmdProc *) TKVLC_INIT,
-       (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "tkvlc::init", (Tcl_ObjCmdProc *) TKVLC_INIT,
+     (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
-    return TCL_OK;
+  return TCL_OK;
 }
