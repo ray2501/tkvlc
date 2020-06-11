@@ -33,6 +33,7 @@ Implement commands
 
 tkvlc::init HANDLE ?HWND|photo?  
 HANDLE open filename  
+HANDLE openurl url  
 HANDLE play  
 HANDLE pause  
 HANDLE stop  
