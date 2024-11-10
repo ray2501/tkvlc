@@ -1077,7 +1077,8 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
         Tcl_NewListObj(pVLC->nSavedCmdObjs, pVLC->savedCmdObjs));
       } else {
         Tcl_Obj **cmdObjs;
-        int i, nCmdObjs;
+        int i;
+        Tcl_Size nCmdObjs;
 
         if (Tcl_ListObjGetElements(interp, objv[2], &nCmdObjs, &cmdObjs)
             != TCL_OK) {
@@ -1206,7 +1207,12 @@ int libVLCObjCmd(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv)
  *----------------------------------------------------------------------
  */
 
+#if (TCL_MAJOR_VERSION > 8)
+static void FreeData(void *clientData)
+#else
 static void FreeData(char *clientData)
+#endif
+
 {
   libVLCData *p = (libVLCData *) clientData;
   libvlc_media_player_t *m;
@@ -1527,7 +1533,7 @@ static int TKVLC_INIT(void *cd, Tcl_Interp *interp, int objc,Tcl_Obj *const*objv
 int Tkvlc_Init(Tcl_Interp *interp)
 {
 #ifdef USE_TCL_STUBS
-  if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
+  if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
     return TCL_ERROR;
   }
 #else
@@ -1540,7 +1546,7 @@ int Tkvlc_Init(Tcl_Interp *interp)
     return TCL_ERROR;
   }
 
-  Tcl_CreateObjCommand(interp, "tkvlc::init", (Tcl_ObjCmdProc *) TKVLC_INIT,
+  Tcl_CreateObjCommand(interp, "::tkvlc::init", (Tcl_ObjCmdProc *) TKVLC_INIT,
      (ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
   return TCL_OK;
