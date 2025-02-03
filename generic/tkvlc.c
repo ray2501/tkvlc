@@ -212,12 +212,12 @@ static int Tk_check(libVLCData *p, Tcl_Interp *interp)
     return TCL_ERROR;
   }
 #ifdef USE_TK_STUBS
-  if (Tk_InitStubs(interp, "8.5", 0) == NULL) {
+  if (Tk_InitStubs(interp, TCL_VERSION, 0) == NULL) {
     p->tk_checked = -1;
     return TCL_ERROR;
   }
 #else
-  if (Tcl_PkgRequire(interp, "Tk", "8.5", 0) == NULL) {
+  if (Tcl_PkgRequire(interp, "Tk", TCL_VERSION, 0) == NULL) {
     p->tk_checked = -1;
     return TCL_ERROR;
   }
@@ -1537,7 +1537,7 @@ int Tkvlc_Init(Tcl_Interp *interp)
     return TCL_ERROR;
   }
 #else
-  if (Tcl_PkgRequire(interp, "Tcl", "8.5", 0) == NULL) {
+  if (Tcl_PkgRequire(interp, "Tcl", TCL_VERSION, 0) == NULL) {
     return TCL_ERROR;
   }
 #endif
