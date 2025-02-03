@@ -4,7 +4,7 @@
 
 Name:          tkvlc
 Summary:       A demo to embed libVLC to Tk toolkit widget
-Version:       0.9
+Version:       1.0
 Release:       0
 License:       MIT
 Group:         Development/Libraries/Tcl
@@ -21,7 +21,7 @@ BuildRoot:     %{buildroot}
 A demo to embed libVLC to Tk toolkit widget.
 
 User also can use this extension in console program, just not
-pass HWND or photo when using tkvlc::init to initialize.
+pass HWND or photo when using ::tkvlc::init to initialize.
 
 %prep
 %setup -q -n %{name}-%{version}
