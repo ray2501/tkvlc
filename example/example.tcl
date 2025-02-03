@@ -80,7 +80,7 @@ set display [frame .tkvlc -width 800 -height 600 -background white -takefocus 1]
 pack $display -fill both -expand 1
 
 # initial our embedded libVLC package
-tkvlc::init tkvlc0 [winfo id $display]
+::tkvlc::init tkvlc0 [winfo id $display]
 
  bind $display <1> {
     if {[tkvlc0 isplaying]==1} {

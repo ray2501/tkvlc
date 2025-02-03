@@ -74,7 +74,7 @@ set display [label .tkvlc -image $photo -background white -takefocus 1]
 pack $display -fill both -expand 1
 
 # Iinitialize libVLC
-tkvlc::init tkvlc0 $photo
+::tkvlc::init tkvlc0 $photo
 
 bind $display <1> {
     if {[tkvlc0 isplaying]} {

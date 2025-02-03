@@ -117,7 +117,7 @@ proc imagecb {w img event} {
 set photo [image create photo -width 640 -height 480]
 
 # Initialize libVLC
-tkvlc::init tkvlc0 $photo
+::tkvlc::init tkvlc0 $photo
 
 # Frame update to 3d canvas
 tkvlc0 event [list imagecb .w1 $photo]

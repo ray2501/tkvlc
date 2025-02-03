@@ -18,7 +18,7 @@ for photo images. This feature "allow for photo images" is from
 and written by Christian Werner. Default is `yes`.
 
 User also can use this extension in console program, just not pass HWND or photo 
-when using `tkvlc::init` to initialize (after version 0.4).
+when using `::tkvlc::init` to initialize (after version 0.4).
 However, tkvlc in console program now only work when interactive with tclsh.
 
 
@@ -31,7 +31,7 @@ MIT
 Implement commands
 =====
 
-tkvlc::init HANDLE ?HWND|photo?  
+::tkvlc::init HANDLE ?HWND|photo?  
 HANDLE open filename  
 HANDLE openurl url  
 HANDLE play  
